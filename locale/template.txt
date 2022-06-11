@@ -1,0 +1,12 @@
+# textdomain: edit_skin
+Edit Skin=
+Templates=
+Bases=
+Footwears=
+Eyes=
+Mouths=
+Bottoms=
+Tops=
+Hairs=
+Headwears=
+Open skin configuration screen.=

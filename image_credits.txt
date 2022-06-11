@@ -1,0 +1,104 @@
+edit_skin_base_1.png
+edit_skin_button.png
+edit_skin_footwear_3.png
+edit_skin_headgear_1.png
+edit_skin_headgear_3.png
+edit_skin_headgear_4.png
+edit_skin_headgear_5.png
+edit_skin_mouth_2.png
+edit_skin_mouth_3.png
+edit_skin_mouth_4.png
+edit_skin_mouth_5.png
+edit_skin_select_overlay.png
+edit_skin_top_2.png
+edit_skin_top_5.png
+edit_skin_eye_5.png
+edit_skin_hair_8.png
+edit_skin_top_6.png
+edit_skin_bottom_3.png
+edit_skin_eye_7.png
+edit_skin_mouth_7.png
+Original work by MrRar
+License: CC BY-SA 4.0
+
+edit_skin_top_1.png
+edit_skin_mouth_1.png
+edit_skin_hair_1.png
+edit_skin_hair_2.png
+edit_skin_eye_1.png
+edit_skin_eye_2.png
+edit_skin_footwear_1.png
+edit_skin_headgear_2.png
+edit_skin_mouth_1.png
+edit_skin_top_1.png
+edit_skin_mouth_2.png
+Name: Pixel Perfection resource pack for Minecraft 1.11
+Author: XSSheep. Adapted for edit_skin by MrRar.
+License: CC BY-SA 4.0
+Source: https://www.planetminecraft.com/texture_pack/131pixel-perfection/
+
+edit_skin_hair_3.png
+edit_skin_eye_3.png
+edit_skin_footwear_2.png
+Name: the 10the doctor
+Author: lovehart. Adapted for edit_skin by MrRar.
+License: CC BY-SA 3.0
+Source: http://minetest.fensta.bplaced.net/#!page:1,filtertype:Id,filter:367
+
+edit_skin_hair_4.png
+Blonde Girl
+Author: Rin. Adapted for edit_skin by MrRar.
+License: CC BY-SA 3.0
+Source: http://minetest.fensta.bplaced.net/#id=918
+
+edit_skin_hair_5.png
+Name: hobbit from lottmob
+Author: lovehart. Adapted for edit_skin by MrRar.
+License: CC BY-SA 3.0 
+Source: http://minetest.fensta.bplaced.net/#id=336
+
+edit_skin_top_4.png
+Name: Oliver_MV
+Author: hansuke123. Adapted for edit_skin by MrRar.
+License: CC BY-SA 3.0
+Source: http://minetest.fensta.bplaced.net/#!page:1,filtertype:Id,filter:291
+
+edit_skin_hair_6.png
+edit_skin_eye_6.png
+Name: Mumbo Jumbo
+Author: ZestyZachary
+License: CC 0 (1.0) 
+Source: http://minetest.fensta.bplaced.net/#!page:1,filtertype:Id,filter:2100
+
+edit_skin_eye_4.png
+Name: lisa
+Author: hansuke123
+License: CC BY-SA 3.0
+Source: http://minetest.fensta.bplaced.net/#!page:1,filtertype:Id,filter:88
+
+edit_skin_headwear_7.png
+Name: Ryu
+Author: Ginsu23. Adapted for edit_skin by MrRar.
+License: CC BY-SA 3.0
+Source: http://minetest.fensta.bplaced.net/#id=464
+
+edit_skin_top_8.png
+Name: Hoodie Enderman
+Author: Kpenguin. Adapted for edit_skin by MrRar.
+License: CC BY-SA 3.0  
+Source: http://minetest.fensta.bplaced.net/#id=962
+
+edit_skin_hair_9.png
+Name: Trader 1
+Author: TenPlus1. Adapted for edit_skin by MrRar.
+License: CC BY-SA 3.0
+Source: http://minetest.fensta.bplaced.net/#id=1258
+
+edit_skin_bottom_4.png
+edit_skin_top_9.png
+edit_skin_top_10.png
+edit_skin_hair_10.png
+edit_skin_hair_11.png
+Name: Pixel Perfection Legacy 1.19
+Author: Nova_Wostra. Adapted for edit_skin by MrRar.
+Source: https://www.planetminecraft.com/texture-pack/pixel-perfection-chorus-edit/
