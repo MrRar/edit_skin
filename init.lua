@@ -79,7 +79,7 @@ end
 minetest.register_chatcommand("skin", {
 	description = S("Open skin configuration screen."),
 	privs = {},
-	func = function(name, param) edit_skin.show_formspec(name) end
+	func = function(name, param) edit_skin.show_formspec(minetest.get_player_by_name(name)) end
 })
 
 function edit_skin.make_hand_texture(base, colorspec)
