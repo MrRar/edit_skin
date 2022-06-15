@@ -1,12 +1,13 @@
 # Edit Skin Mod
-[![ContentDB](https://content.minetest.net/packages/Mr.%20Rar/edit/shields/downloads/)](https://content.minetest.net/packages/Mr.%20Rar/edit_skin/)
+[![ContentDB](https://content.minetest.net/packages/Mr.%20Rar/edit_skin/shields/downloads/)](https://content.minetest.net/packages/Mr.%20Rar/edit_skin/)
 
 ![screenshot](screenshot.png)
 
 This mod allows advanced skin customization.
 New players get a randomly selected male or female skin.
-It is compatible with sfinv, i3, unified_inventory, inventory_plus, smart_inventory and 3d_armor.
+It is compatible with sfinv, sfinv_buttons, i3, unified_inventory, inventory_plus, smart_inventory, and 3d_armor.
 Use the /skin command to open the skin configuration screen.
+This mod requires Minetest 5+
 This mod was originally made for MineClone 5.
 
 ## License

@@ -38,7 +38,7 @@ edit_skin = {
 		0xff449acc, -- 12 Light blue Steve top
 		0xff124d87, -- 13 Dark blue Steve bottom
 		0xfffc0eb3, -- 14 Pink
-		0xffd0672a -- 15 Orange Alex hair
+		0xffd0672a, -- 15 Orange Alex hair
 	},
 	footwear = {},
 	mouth = {},
@@ -314,21 +314,48 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 		if active_tab == "base" then colors = edit_skin.base_color end
 		
 		local tab_color = active_tab .. "_color"
-		
+		local selected_color = skin[tab_color]
 		for i, colorspec in pairs(colors) do
 			local overlay = ""
-			if skin[tab_color] == colorspec then
+			if selected_color == colorspec then
 				overlay = "^edit_skin_select_overlay.png"
 			end
 		
 			local color = minetest.colorspec_to_colorstring(colorspec)
 			i = i - 1
-			local x = 3.6 + i % 8 * 1.1
-			local y = 7 + math.floor(i / 8) * 1.1
+			local x = 3.6 + i % 6 * 0.9
+			local y = 7 + math.floor(i / 6) * 0.9
 			formspec = formspec ..
 				"image_button[" .. x .. "," .. y ..
-				";1,1;blank.png^[noalpha^[colorize:" ..
+				";0.8,0.8;blank.png^[noalpha^[colorize:" ..
 				color .. ":alpha" .. overlay .. ";" .. colorspec .. ";]"
+		end
+		
+		if not (active_tab == "base") then
+			-- Bitwise Operations !?!?!
+			local red = math.floor(selected_color / 0x10000) - 0xff00
+			local green = math.floor(selected_color / 0x100) - 0xff0000 - red * 0x100
+			local blue = selected_color - 0xff000000 - red * 0x10000 - green * 0x100
+			formspec = formspec ..
+				"container[9.2,7.2]" ..
+				"scrollbaroptions[min=0;max=255;smallstep=20]" ..
+				
+				"box[0.4,0;2.49,0.38;red]" ..
+				"label[0.2,0.2;-]" ..
+				"scrollbar[0.4,0;2.5,0.4;horizontal;red;" .. red .."]" ..
+				"label[2.9,0.2;+]" ..
+				
+				"box[0.4,0.6;2.49,0.38;green]" ..
+				"label[0.2,0.8;-]" ..
+				"scrollbar[0.4,0.6;2.5,0.4;horizontal;green;" .. green .."]" ..
+				"label[2.9,0.8;+]" ..
+				
+				"box[0.4,1.2;2.49,0.38;blue]" ..
+				"label[0.2,1.4;-]" ..
+				"scrollbar[0.4,1.2;2.5,0.4;horizontal;blue;" .. blue .. "]" ..
+				"label[2.9,1.4;+]" ..
+				
+				"container_end[]"
 		end
 	end
 	
@@ -356,6 +383,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if not page_num or not active_tab then return true end
 	page_num = math.floor(tonumber(page_num) or 1)
 	local player_name = player:get_player_name()
+	
+	if edit_skin.players[player_name].form_send_job then
+		edit_skin.players[player_name].form_send_job:cancel()
+	end
 	
 	if fields.quit then
 		edit_skin.save(player)
@@ -394,6 +425,38 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		return true
 	end
 	
+	if
+		skin[active_tab .. "_color"] and (
+			fields.red and fields.red:find("^CHG") or
+			fields.green and fields.green:find("^CHG") or
+			fields.blue and fields.blue:find("^CHG")
+		)
+	then
+		local red = fields.red:gsub("%a%a%a:", "")
+		local green = fields.green:gsub("%a%a%a:", "")
+		local blue = fields.blue:gsub("%a%a%a:", "")
+		red = tonumber(red) or 0
+		green = tonumber(green) or 0
+		blue = tonumber(blue) or 0
+		
+		local color = 0xff000000 + red * 0x10000 + green * 0x100 + blue
+		if color >= 0 and color <= 0xffffffff then
+			-- We delay resedning the form because otherwise it will break dragging scrollbars
+			edit_skin.players[player_name].form_send_job = minetest.after(0.2, function()
+				if player and player:is_player() then
+					skin[active_tab .. "_color"] = color
+					edit_skin.update_player_skin(player)
+					edit_skin.show_formspec(player, active_tab, page_num)
+					edit_skin.players[player_name].form_send_job = nil
+				end
+			end)
+			return true
+		end
+	end
+	fields.red = nil
+	fields.green = nil
+	fields.blue = nil
+	
 	local field = next(fields)
 	
 	-- See if field is a texture
@@ -425,7 +488,7 @@ end)
 
 local function init()
 	local function file_exists(name)
-		f = io.open(name)
+		local f = io.open(name)
 		if not f then
 			return false
 		end
@@ -471,7 +534,14 @@ local function init()
 			end,
 		})
 	end
-	if minetest.global_exists("sfinv") then
+	if minetest.global_exists("sfinv_buttons") then
+		sfinv_buttons.register_button("edit_skin", {
+			title = S("Edit Skin"),
+			action = function(player) edit_skin.show_formspec(player) end,
+			tooltip = S("Open skin configuration screen."),
+			image = "edit_skin_button.png",
+		})
+	elseif minetest.global_exists("sfinv") then
 		sfinv.register_page("edit_skin", {
 			title = S("Edit Skin"),
 			get = function(self, player, context) return "" end,
