@@ -453,14 +453,17 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 			return true
 		end
 	end
-	fields.red = nil
-	fields.green = nil
-	fields.blue = nil
 	
-	local field = next(fields)
+	local field
+	for f, value in pairs(fields) do
+		if value == "" then
+			field = f
+			break
+		end
+	end
 	
 	-- See if field is a texture
-	if edit_skin[active_tab] then
+	if field and edit_skin[active_tab] then
 		for i, texture in pairs(edit_skin[active_tab]) do
 			if texture == field then
 				skin[active_tab] = texture
@@ -470,10 +473,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 			end
 		end
 	end
-	
+		
 	-- See if field is a color
 	local number = tonumber(field)
-	if skin[active_tab .. "_color"] and number then
+	if number and skin[active_tab .. "_color"] then
 		local color = math.floor(number)
 		if color and color >= 0 and color <= 0xffffffff then
 			skin[active_tab .. "_color"] = color
