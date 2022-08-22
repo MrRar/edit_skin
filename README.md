@@ -7,7 +7,7 @@ This mod allows advanced skin customization.
 New players get a randomly selected male or female skin.
 It is compatible with sfinv, sfinv_buttons, i3, unified_inventory, inventory_plus, smart_inventory, and 3d_armor.
 Use the /skin command to open the skin configuration screen.
-This mod requires Minetest 5+
+This mod requires Minetest 5.5+
 This mod was originally made for MineClone 5.
 
 ## License
@@ -27,15 +27,13 @@ Set the item type. Valid values are: "base", "footwear", "eye", "mouth", "bottom
 
 `texture`
 Set to the image file that will be used. If this property is omitted "blank.png" is used.
-If texture is not 64x32 then the automatic preview will not display properly.
 
 `mask`
 Set the color mask texture. Coloring is only applied to non transparent areas of the texture.
 Coloring only works for "base", "bottom, "top", and "hair".
-If texture is not 64x32 then the automatic preview will not display properly.
 
-`preview`
-Set a custom preview texture. You can use texture modifiers. If preview contains the string `{color}` it will be replaced with the item's colorstring.
+`preview_rotation`
+A table containing properties x and y. x and y represent the x and y rotation of the item preview.
 
 `alex`
 If set to true the item will be default for female character.

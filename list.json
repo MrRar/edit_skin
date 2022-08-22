@@ -162,7 +162,10 @@
 	{
 		"type": "headwear",
 		"texture": "edit_skin_headwear_6.png",
-		"preview": "edit_skin_headwear_6.png^[sheet:8x4:7,1"
+		"preview_rotation": {
+			"x": -10,
+			"y": 200
+		}
 	},
 	{
 		"type": "headwear",

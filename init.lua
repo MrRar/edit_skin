@@ -48,7 +48,7 @@ edit_skin = {
 	hair = {},
 	headwear = {},
 	masks = {},
-	previews = {},
+	preview_rotations = {},
 	players = {}
 }
 
@@ -65,7 +65,9 @@ function edit_skin.register_item(item)
 	
 	table.insert(edit_skin[item.type], texture)
 	edit_skin.masks[texture] = item.mask
-	if item.preview then edit_skin.previews[texture] = item.preview end
+	if item.preview_rotation then
+		edit_skin.preview_rotations[texture] = item.preview_rotation
+	end
 end
 
 function edit_skin.save(player)
@@ -122,7 +124,7 @@ function edit_skin.update_player_skin(player)
 
 	player_api.set_texture(player, 1, output)
 	
-	for i=1, #edit_skin.registered_on_set_skins do
+	for i = 1, #edit_skin.registered_on_set_skins do
 		edit_skin.registered_on_set_skins[i](player)
 	end
 	
@@ -191,7 +193,7 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 	local page_count
 	if page_num < 1 then page_num = 1 end
 	if edit_skin[active_tab] then
-		page_count = math.ceil(#edit_skin[active_tab] / 25)
+		page_count = math.ceil(#edit_skin[active_tab] / 16)
 		if page_num > page_count then
 			page_num = page_count
 		end
@@ -202,9 +204,7 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 	
 	local player_name = player:get_player_name()
 	local skin = edit_skin.players[player_name]
-	local formspec = "formspec_version[3]" ..
-		"size[13,10]" ..
-		"style_type[image_button;bgimg=blank.png^[noalpha^[colorize:gray]"
+	local formspec = "formspec_version[3]size[13.2,11]"
 	
 	for i, tab in pairs(edit_skin.tab_names_display_order) do
 		if tab == active_tab then
@@ -222,7 +222,7 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 		local textures = player_api.get_textures(player)
 		textures[2] = "blank.png" -- Clear out the armor
 		formspec = formspec ..
-			"model[9.5,0.3;3,7;player_mesh;" .. mesh .. ";" ..
+			"model[10,0.3;3,7;player_mesh;" .. mesh .. ";" ..
 			table.concat(textures, ",") ..
 			";0,180;false;true;0,0;0]"
 	end
@@ -242,70 +242,53 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 			"button[6.5,5.2;2,0.8;alex;" .. S("Select") .. "]"
 			
 	elseif edit_skin[active_tab] then
+		formspec = formspec ..
+			"style_type[button,image_button;border=false;bgcolor=#00000000]"
 		local textures = edit_skin[active_tab]
-		local page_start = (page_num - 1) * 25 + 1
-		local page_end = math.min(page_start + 25 - 1, #textures)
+		local page_start = (page_num - 1) * 16 + 1
+		local page_end = math.min(page_start + 16 - 1, #textures)
 		
 		for j = page_start, page_end do
 			local i = j - page_start + 1
 			local texture = textures[j]
-			local preview = ""
-			if edit_skin.previews[texture] then
-				preview = edit_skin.previews[texture]
-				if skin[active_tab .. "_color"] then
-					local color = minetest.colorspec_to_colorstring(skin[active_tab .. "_color"])
-					preview = preview:gsub("{color}", color)
-				end
-			elseif active_tab == "base" then
-				if edit_skin.masks[texture] then
-					preview = edit_skin.masks[texture] .. "^[sheet:8x4:1,1" ..
-						"^[colorize:" .. color_to_string(skin.base_color) .. ":alpha"
-				end
-				if #preview > 0 then preview = preview .. "^" end
-				preview = preview .. "(" .. texture .. "^[sheet:8x4:1,1)"
-			elseif active_tab == "mouth" or active_tab == "eye" then
-				preview = texture .. "^[sheet:8x4:1,1"
-			elseif active_tab == "headwear" then
-				preview = texture .. "^[sheet:8x4:5,1^(" .. texture .. "^[sheet:8x4:1,1)"
-			elseif active_tab == "hair" then
-				if edit_skin.masks[texture] then
-					preview = edit_skin.masks[texture] .. "^[sheet:8x4:1,1" ..
-						"^[colorize:" .. color_to_string(skin.hair_color) .. ":alpha^(" ..
-						texture .. "^[sheet:8x4:1,1)^(" ..
-						edit_skin.masks[texture] .. "^[sheet:8x4:5,1" ..
-						"^[colorize:" .. color_to_string(skin.hair_color) .. ":alpha)" ..
-						"^(" .. texture .. "^[sheet:8x4:5,1)"
-				else
-					preview = texture .. "^[sheet:8x4:5,1"
-				end
-			elseif active_tab == "top" then
-				if edit_skin.masks[texture] then
-					preview = "[combine:12x12:-18,-20=" .. edit_skin.masks[texture] ..
-						"^[colorize:" .. color_to_string(skin.top_color) .. ":alpha"
-				end
-				if #preview > 0 then preview = preview .. "^" end
-				preview = preview .. "[combine:12x12:-18,-20=" .. texture .. "^[mask:edit_skin_top_preview_mask.png"
-			elseif active_tab == "bottom" then
-				if edit_skin.masks[texture] then
-					preview = "[combine:12x12:0,-20=" .. edit_skin.masks[texture] ..
-						"^[colorize:" .. color_to_string(skin.bottom_color) .. ":alpha"
-				end
-				if #preview > 0 then preview = preview .. "^" end
-				preview = preview .. "[combine:12x12:0,-20=" .. texture .. "^[mask:edit_skin_bottom_preview_mask.png"
-			elseif active_tab == "footwear" then
-				preview = "[combine:12x12:0,-20=" .. texture .. "^[mask:edit_skin_bottom_preview_mask.png"
+			local preview = edit_skin.masks[skin.base] .. "^[colorize:gray^" .. skin.base
+			local color = color_to_string(skin[active_tab .. "_color"])
+			local mask = edit_skin.masks[texture]
+			if color and mask then
+				preview = preview .. "^(" .. mask .. "^[colorize:" .. color .. ":alpha)"
+			end
+			preview = preview .. "^" .. texture
+			
+			local mesh = "edit_skin_head.obj"
+			if active_tab == "top" then
+				mesh = "edit_skin_top.obj"
+			elseif active_tab == "bottom" or active_tab == "footwear" then
+				mesh = "edit_skin_bottom.obj"
 			end
 			
-			if skin[active_tab] == texture then
-				preview = preview .. "^edit_skin_select_overlay.png"
+			local rot_x = -10
+			local rot_y = 20
+			if edit_skin.preview_rotations[texture] then
+				rot_x = edit_skin.preview_rotations[texture].x
+				rot_y = edit_skin.preview_rotations[texture].y
 			end
 			
 			i = i - 1
-			local x = 3.6 + i % 5 * 1.1
-			local y = 0.3 + math.floor(i / 5) * 1.1
+			local x = 3.5 + i % 4 * 1.6
+			local y = 0.3 + math.floor(i / 4) * 1.6
 			formspec = formspec ..
-				"image_button[" .. x .. "," .. y ..
-				";1,1;" .. preview .. ";" .. texture .. ";]"
+				"model[" .. x .. "," .. y ..
+				";1.5,1.5;" .. mesh .. ";" .. mesh .. ";" ..
+				preview ..
+				";" .. rot_x .. "," .. rot_y .. ";false;false;0,0;0]"
+			
+			if skin[active_tab] == texture then
+				formspec = formspec ..
+					"image_button[" .. x .. "," .. y ..
+					";1.5,1.5;edit_skin_select_overlay.png;" .. texture .. ";]"
+			else
+				formspec = formspec .. "button[" .. x .. "," .. y .. ";1.5,1.5;" .. texture .. ";]"
+			end
 		end
 	end
 	
@@ -321,10 +304,10 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 				overlay = "^edit_skin_select_overlay.png"
 			end
 		
-			local color = minetest.colorspec_to_colorstring(colorspec)
+			local color = color_to_string(colorspec)
 			i = i - 1
 			local x = 3.6 + i % 6 * 0.9
-			local y = 7 + math.floor(i / 6) * 0.9
+			local y = 8 + math.floor(i / 6) * 0.9
 			formspec = formspec ..
 				"image_button[" .. x .. "," .. y ..
 				";0.8,0.8;blank.png^[noalpha^[colorize:" ..
@@ -337,7 +320,7 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 			local green = math.floor(selected_color / 0x100) - 0xff0000 - red * 0x100
 			local blue = selected_color - 0xff000000 - red * 0x10000 - green * 0x100
 			formspec = formspec ..
-				"container[9.2,7.2]" ..
+				"container[9.2,8]" ..
 				"scrollbaroptions[min=0;max=255;smallstep=20]" ..
 				
 				"box[0.4,0;2.49,0.38;red]" ..
@@ -361,17 +344,17 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 	
 	if page_num > 1 then
 		formspec = formspec ..
-			"image_button[3.6,5.8;1,1;edit_skin_arrow.png^[transformFX;previous_page;]"
+			"image_button[3.5,6.7;1,1;edit_skin_arrow.png^[transformFX;previous_page;]"
 	end
 	
 	if page_num < page_count then
 		formspec = formspec ..
-			"image_button[8,5.8;1,1;edit_skin_arrow.png;next_page;]"
+			"image_button[8.8,6.7;1,1;edit_skin_arrow.png;next_page;]"
 	end
 	
 	if page_count > 1 then
 		formspec = formspec ..
-			"label[5.9,6.3;" .. page_num .. " / " .. page_count .. "]"
+			"label[6.3,7.2;" .. page_num .. " / " .. page_count .. "]"
 	end
 
 	minetest.show_formspec(player_name, "edit_skin:" .. active_tab .. "_" .. page_num, formspec)
@@ -520,8 +503,6 @@ local function init()
 	edit_skin.alex.hair_color = edit_skin.color[15]
 	edit_skin.alex.top_color = edit_skin.color[8]
 	edit_skin.alex.bottom_color = edit_skin.color[1]
-	
-	edit_skin.previews["blank.png"] = "blank.png"
 	
 	if minetest.global_exists("i3") then
 		i3.new_tab("edit_skin", {
