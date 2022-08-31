@@ -101,4 +101,13 @@ edit_skin_hair_10.png
 edit_skin_hair_11.png
 Name: Pixel Perfection Legacy 1.19
 Author: Nova_Wostra. Adapted for edit_skin by MrRar.
+License: CC BY-SA 4.0
 Source: https://www.planetminecraft.com/texture-pack/pixel-perfection-chorus-edit/
+
+mcl_skins_bottom.obj
+mcl_skins_head.obj
+mcl_skins_top.obj
+Name: character.blend in player_api mod from Minetest Game
+Author: celeron55, MirceaKitsune, Jordach, kilbith, sofar, xunto, Rogier-5, TeTpaAka, Desour, stujones11, An0n3m0us. Adapted for mcl_skins by MrRar.
+License: CC BY-SA 3.0
+Source: https://github.com/minetest/minetest_game

@@ -4,8 +4,8 @@ local S = minetest.get_translator("edit_skin")
 local color_to_string = minetest.colorspec_to_colorstring
 
 edit_skin = {
-	tab_names = {"base", "footwear", "eye", "mouth", "bottom", "top", "hair", "headwear"}, -- Rendering order
-	tab_names_display_order = {"template", "base", "headwear", "hair", "eye", "mouth", "top", "bottom", "footwear"},
+	item_names = {"base", "footwear", "eye", "mouth", "bottom", "top", "hair", "headwear"},
+	tab_names = {"template", "base", "headwear", "hair", "eye", "mouth", "top", "bottom", "footwear"},
 	tab_descriptions = {
 		template = S("Templates"),
 		base = S("Bases"),
@@ -71,7 +71,7 @@ function edit_skin.register_item(item)
 end
 
 function edit_skin.save(player)
-	if not player or not player:is_player() then return end
+	if not player:is_player() then return end
 	local name = player:get_player_name()
 	local skin = edit_skin.players[name]
 	if not skin then return end
@@ -96,14 +96,16 @@ function edit_skin.make_hand_texture(base, colorspec)
 end
 
 function edit_skin.compile_skin(skin)
+	if not skin then return "blank.png" end
+
 	local output = ""
-	for i, tab in pairs(edit_skin.tab_names) do
-		local texture = skin[tab]
+	for i, item in pairs(edit_skin.item_names) do
+		local texture = skin[item]
 		if texture and texture ~= "blank.png" then
 			
-			if skin[tab .. "_color"] and edit_skin.masks[texture] then
+			if skin[item .. "_color"] and edit_skin.masks[texture] then
 				if #output > 0 then output = output .. "^" end
-				local color = color_to_string(skin[tab .. "_color"])
+				local color = color_to_string(skin[item .. "_color"])
 				output = output ..
 					"(" .. edit_skin.masks[texture] .. "^[colorize:" .. color .. ":alpha)"
 			end
@@ -115,11 +117,6 @@ function edit_skin.compile_skin(skin)
 end
 
 function edit_skin.update_player_skin(player)
-	
-	if not player then
-		return
-	end
-
 	local output = edit_skin.compile_skin(edit_skin.players[player:get_player_name()])
 
 	player_api.set_texture(player, 1, output)
@@ -169,7 +166,11 @@ minetest.register_on_joinplayer(function(player)
 	
 	 -- Needed for 3D Armor + sfinv
 	if minetest.global_exists("armor") then
-		minetest.after(0.01, function() edit_skin.update_player_skin(player) end)
+		minetest.after(0.01, function()
+			if player:is_player() then
+				edit_skin.update_player_skin(player)
+			end
+		end)
 	end
 end)
 
@@ -206,7 +207,7 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 	local skin = edit_skin.players[player_name]
 	local formspec = "formspec_version[3]size[13.2,11]"
 	
-	for i, tab in pairs(edit_skin.tab_names_display_order) do
+	for i, tab in pairs(edit_skin.tab_names) do
 		if tab == active_tab then
 			formspec = formspec ..
 				"style[" .. tab .. ";bgcolor=green]"
@@ -364,9 +365,17 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if not formname:find("^edit_skin:") then return false end
 	local _, _, active_tab, page_num = formname:find("^edit_skin:(%a+)_(%d+)")
 	if not page_num or not active_tab then return true end
+	
+	local active_tab_found = false
+	for _, tab in pairs(edit_skin.tab_names) do
+		if tab == active_tab then active_tab_found = true end
+	end
+	active_tab = active_tab_found and active_tab or "template"
+	
 	page_num = math.floor(tonumber(page_num) or 1)
 	local player_name = player:get_player_name()
 	
+	-- Cancel formspec resend after scrollbar move
 	if edit_skin.players[player_name].form_send_job then
 		edit_skin.players[player_name].form_send_job:cancel()
 	end
@@ -388,7 +397,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		return true
 	end
 	
-	for i, tab in pairs(edit_skin.tab_names_display_order) do
+	for i, tab in pairs(edit_skin.tab_names) do
 		if fields[tab] then
 			edit_skin.show_formspec(player, tab, page_num)
 			return true
