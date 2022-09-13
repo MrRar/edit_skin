@@ -225,20 +225,20 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 		formspec = formspec ..
 			"model[10,0.3;3,7;player_mesh;" .. mesh .. ";" ..
 			table.concat(textures, ",") ..
-			";0,180;false;true;0,0;0]"
+			";0,180;false;true;0,0]"
 	end
 	
 	if active_tab == "template" and mesh then
 		formspec = formspec ..
 			"model[4,2;2,3;player_mesh;" .. mesh .. ";" ..
 			edit_skin.compile_skin(edit_skin.steve) ..
-			",blank.png,blank.png;0,180;false;true;0,0;0]" ..
+			",blank.png,blank.png;0,180;false;true;0,0]" ..
 
 			"button[4,5.2;2,0.8;steve;" .. S("Select") .. "]" ..
 
 			"model[6.5,2;2,3;player_mesh;" .. mesh .. ";" ..
 			edit_skin.compile_skin(edit_skin.alex) ..
-			",blank.png,blank.png;0,180;false;true;0,0;0]" ..
+			",blank.png,blank.png;0,180;false;true;0,0]" ..
 			
 			"button[6.5,5.2;2,0.8;alex;" .. S("Select") .. "]"
 			
@@ -281,7 +281,7 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 				"model[" .. x .. "," .. y ..
 				";1.5,1.5;" .. mesh .. ";" .. mesh .. ";" ..
 				preview ..
-				";" .. rot_x .. "," .. rot_y .. ";false;false;0,0;0]"
+				";" .. rot_x .. "," .. rot_y .. ";false;false;0,0]"
 			
 			if skin[active_tab] == texture then
 				formspec = formspec ..
