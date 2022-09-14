@@ -72,8 +72,7 @@ end
 
 function edit_skin.save(player)
 	if not player:is_player() then return end
-	local name = player:get_player_name()
-	local skin = edit_skin.players[name]
+	local skin = edit_skin.players[player]
 	if not skin then return end
 	player:get_meta():set_string("edit_skin:skin", minetest.serialize(skin))
 end
@@ -83,17 +82,6 @@ minetest.register_chatcommand("skin", {
 	privs = {},
 	func = function(name, param) edit_skin.show_formspec(minetest.get_player_by_name(name)) end
 })
-
-function edit_skin.make_hand_texture(base, colorspec)
-	local output = ""
-	if edit_skin.masks[base] then
-		output = edit_skin.masks[base] ..
-			"^[colorize:" .. color_to_string(colorspec) .. ":alpha"
-	end
-	if #output > 0 then output = output .. "^" end
-	output = output .. base
-	return output
-end
 
 function edit_skin.compile_skin(skin)
 	if not skin then return "blank.png" end
@@ -117,9 +105,15 @@ function edit_skin.compile_skin(skin)
 end
 
 function edit_skin.update_player_skin(player)
-	local output = edit_skin.compile_skin(edit_skin.players[player:get_player_name()])
+	local output = edit_skin.compile_skin(edit_skin.players[player])
 
 	player_api.set_texture(player, 1, output)
+	
+	-- Set player first person hand node
+	local base = edit_skin.players[player].base
+	local base_color = edit_skin.players[player].base_color
+	local node_id = base:gsub(".png$", "") .. color_to_string(base_color):gsub("#", "")
+	player:get_inventory():set_stack("hand", 1, "edit_skin:" .. node_id)
 	
 	for i = 1, #edit_skin.registered_on_set_skins do
 		edit_skin.registered_on_set_skins[i](player)
@@ -142,22 +136,24 @@ minetest.register_on_joinplayer(function(player)
 	local function table_get_random(t)
 		return t[math.random(#t)]
 	end
-	local name = player:get_player_name()
 	local skin = player:get_meta():get_string("edit_skin:skin")
 	if skin then
 		skin = minetest.deserialize(skin)
 	end
 	if skin then
-		edit_skin.players[name] = skin
+		edit_skin.players[player] = skin
 	else
 		if math.random() > 0.5 then
 			skin = table.copy(edit_skin.steve)
 		else
 			skin = table.copy(edit_skin.alex)
 		end
-		edit_skin.players[name] = skin
+		edit_skin.players[player] = skin
 		edit_skin.save(player)
 	end
+	
+	player:get_inventory():set_size("hand", 1)
+	
 	edit_skin.update_player_skin(player)
 
 	if minetest.global_exists("inventory_plus") and inventory_plus.register_button then
@@ -175,10 +171,8 @@ minetest.register_on_joinplayer(function(player)
 end)
 
 minetest.register_on_leaveplayer(function(player)
-	local name = player:get_player_name()
-	if name then
-		edit_skin.players[name] = nil
-	end
+	player:get_inventory():set_size("hand", 0)
+	edit_skin.players[player] = nil
 end)
 
 edit_skin.registered_on_set_skins = {}
@@ -203,8 +197,7 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 		page_count = 1
 	end
 	
-	local player_name = player:get_player_name()
-	local skin = edit_skin.players[player_name]
+	local skin = edit_skin.players[player]
 	local formspec = "formspec_version[3]size[13.2,11]"
 	
 	for i, tab in pairs(edit_skin.tab_names) do
@@ -285,11 +278,12 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 			
 			if skin[active_tab] == texture then
 				formspec = formspec ..
-					"image_button[" .. x .. "," .. y ..
-					";1.5,1.5;edit_skin_select_overlay.png;" .. texture .. ";]"
-			else
-				formspec = formspec .. "button[" .. x .. "," .. y .. ";1.5,1.5;" .. texture .. ";]"
+					"style[" .. texture ..
+					";bgcolor=;bgimg=edit_skin_select_overlay.png;" ..
+					"bgimg_pressed=edit_skin_select_overlay.png;bgimg_middle=14,14]"
 			end
+			
+			formspec = formspec .. "button[" .. x .. "," .. y .. ";1.5,1.5;" .. texture .. ";]"
 		end
 	end
 	
@@ -300,11 +294,6 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 		local tab_color = active_tab .. "_color"
 		local selected_color = skin[tab_color]
 		for i, colorspec in pairs(colors) do
-			local overlay = ""
-			if selected_color == colorspec then
-				overlay = "^edit_skin_select_overlay.png"
-			end
-		
 			local color = color_to_string(colorspec)
 			i = i - 1
 			local x = 3.6 + i % 6 * 0.9
@@ -312,7 +301,14 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 			formspec = formspec ..
 				"image_button[" .. x .. "," .. y ..
 				";0.8,0.8;blank.png^[noalpha^[colorize:" ..
-				color .. ":alpha" .. overlay .. ";" .. colorspec .. ";]"
+				color .. ":alpha;" .. colorspec .. ";]"
+			
+			if selected_color == colorspec then
+				formspec = formspec ..
+					"style[" .. color ..
+					";bgcolor=;bgimg=edit_skin_select_overlay.png;bgimg_middle=14,14]" ..
+					"button[" .. x .. "," .. y .. ";0.8,0.8;" .. color .. ";]"
+			end
 		end
 		
 		if not (active_tab == "base") then
@@ -358,7 +354,7 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 			"label[6.3,7.2;" .. page_num .. " / " .. page_count .. "]"
 	end
 
-	minetest.show_formspec(player_name, "edit_skin:" .. active_tab .. "_" .. page_num, formspec)
+	minetest.show_formspec(player:get_player_name(), "edit_skin:" .. active_tab .. "_" .. page_num, formspec)
 end
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)
@@ -373,11 +369,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	active_tab = active_tab_found and active_tab or "template"
 	
 	page_num = math.floor(tonumber(page_num) or 1)
-	local player_name = player:get_player_name()
 	
 	-- Cancel formspec resend after scrollbar move
-	if edit_skin.players[player_name].form_send_job then
-		edit_skin.players[player_name].form_send_job:cancel()
+	if edit_skin.players[player].form_send_job then
+		edit_skin.players[player].form_send_job:cancel()
 	end
 	
 	if fields.quit then
@@ -386,12 +381,12 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	end
 
 	if fields.alex then
-		edit_skin.players[player_name] = table.copy(edit_skin.alex)
+		edit_skin.players[player] = table.copy(edit_skin.alex)
 		edit_skin.update_player_skin(player)
 		edit_skin.show_formspec(player, active_tab, page_num)
 		return true
 	elseif fields.steve then
-		edit_skin.players[player_name] = table.copy(edit_skin.steve)
+		edit_skin.players[player] = table.copy(edit_skin.steve)
 		edit_skin.update_player_skin(player)
 		edit_skin.show_formspec(player, active_tab, page_num)
 		return true
@@ -404,7 +399,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		end
 	end
 	
-	local skin = edit_skin.players[player_name]
+	local skin = edit_skin.players[player]
 	if not skin then return true end
 	
 	if fields.next_page then
@@ -434,12 +429,12 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		local color = 0xff000000 + red * 0x10000 + green * 0x100 + blue
 		if color >= 0 and color <= 0xffffffff then
 			-- We delay resedning the form because otherwise it will break dragging scrollbars
-			edit_skin.players[player_name].form_send_job = minetest.after(0.2, function()
+			edit_skin.players[player].form_send_job = minetest.after(0.2, function()
 				if player and player:is_player() then
 					skin[active_tab .. "_color"] = color
 					edit_skin.update_player_skin(player)
 					edit_skin.show_formspec(player, active_tab, page_num)
-					edit_skin.players[player_name].form_send_job = nil
+					edit_skin.players[player].form_send_job = nil
 				end
 			end)
 			return true
@@ -513,6 +508,30 @@ local function init()
 	edit_skin.alex.top_color = edit_skin.color[8]
 	edit_skin.alex.bottom_color = edit_skin.color[1]
 	
+	-- Register junk first person hand nodes
+	local function make_texture(base, colorspec)
+		local output = ""
+		if edit_skin.masks[base] then
+			output = edit_skin.masks[base] ..
+				"^[colorize:" .. color_to_string(colorspec) .. ":alpha"
+		end
+		if #output > 0 then output = output .. "^" end
+		output = output .. base
+		return output
+	end
+	for _, base in pairs(edit_skin.base) do
+		for _, base_color in pairs(edit_skin.base_color) do
+			local id = base:gsub(".png$", "") .. color_to_string(base_color):gsub("#", "")
+			minetest.register_node("edit_skin:" .. id, {
+				drawtype = "mesh",
+				groups = { not_in_creative_inventory = 1 },
+				tiles = { make_texture(base, base_color) },
+				use_texture_alpha = "clip",
+				mesh = "edit_skin_hand.obj",
+			})
+		end
+	end
+	
 	if minetest.global_exists("i3") then
 		i3.new_tab("edit_skin", {
 			description = S("Edit Skin"),
@@ -556,7 +575,7 @@ local function init()
 	end
 	if minetest.global_exists("armor") and armor.get_player_skin then
 		armor.get_player_skin = function(armor, name)
-			return edit_skin.compile_skin(edit_skin.players[name])
+			return edit_skin.compile_skin(edit_skin.players[minetest.get_player_by_name(name)])
 		end
 	end
 	if minetest.global_exists("inventory_plus") then

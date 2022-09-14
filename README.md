@@ -55,10 +55,6 @@ This parameter is optional. Must be a number. If it is not a valid page number t
 Register a function to be called whenever a player skin changes.
 The function will be given a player ObjectRef as a parameter.
 
-### `edit_skin.make_hand_texture(base, colorspec)`
-Generate a texture string from a base texture and color.
-This function is used by mods that want to have a first person hand textured like the player skin.
-
 ### `edit_skin.save(player)`
 Save player skin. `player` is a player ObjectRef.
 
@@ -74,7 +70,7 @@ These colors are separate from `edit_skin.color` because some mods register two 
 A table of ColorSpec integers that the player can select to color colorable skin items.
 
 ### `edit_skin.players`
-A table mapped by player name containing tables holding the player's selected skin items and colors.
+A table mapped by player ObjectRef containing tables holding the player's selected skin items and colors.
 Only stores skin information for logged in users.
 
 ### edit_skin.compile_skin(skin)
