@@ -6,6 +6,7 @@ local color_to_string = minetest.colorspec_to_colorstring
 edit_skin = {
 	item_names = {"base", "footwear", "eye", "mouth", "bottom", "top", "hair", "headwear"},
 	tab_names = {"template", "base", "headwear", "hair", "eye", "mouth", "top", "bottom", "footwear"},
+	tab_names_lite = {"headwear", "hair", "top", "bottom", "footwear"},
 	tab_descriptions = {
 		template = S("Templates"),
 		base = S("Bases"),
@@ -40,20 +41,32 @@ edit_skin = {
 		0xfffc0eb3, -- 14 Pink
 		0xffd0672a, -- 15 Orange Alex hair
 	},
-	footwear = {},
-	mouth = {},
-	eye = {},
-	bottom = {},
-	top = {},
-	hair = {},
-	headwear = {},
-	masks = {},
+    male = {
+        base = {},
+    	footwear = {},
+	    mouth = {},
+    	eye = {},
+    	bottom = {},
+    	top = {},
+    	hair = {},
+    	headwear = {},
+    },
+    female = {
+        base = {},
+    	footwear = {},
+	    mouth = {},
+    	eye = {},
+    	bottom = {},
+    	top = {},
+    	hair = {},
+    	headwear = {},
+    },
+ 	masks = {},
 	preview_rotations = {},
-	players = {}
+    players = {}
 }
 
 function edit_skin.register_item(item)
-	assert(edit_skin[item.type], "Skin item type " .. item.type .. " does not exist.")
 	local texture = item.texture or "blank.png"
 	if item.steve then
 		edit_skin.steve[item.type] = texture
@@ -63,7 +76,20 @@ function edit_skin.register_item(item)
 		edit_skin.alex[item.type] = texture
 	end
 	
-	table.insert(edit_skin[item.type], texture)
+    if item.type == "base" then
+	    table.insert(edit_skin[item.type], texture)
+	    table.insert(edit_skin["male"][item.type], texture)
+	    table.insert(edit_skin["female"][item.type], texture)
+    elseif item.gender == "both" then
+	    table.insert(edit_skin["male"][item.type], texture)
+	    table.insert(edit_skin["female"][item.type], texture)
+    else
+        if item.gender == "male" then
+	        table.insert(edit_skin.male[item.type], texture)
+        elseif item.gender == "female" then
+            table.insert(edit_skin.female[item.type], texture)
+        end
+    end
 	edit_skin.masks[texture] = item.mask
 	if item.preview_rotation then
 		edit_skin.preview_rotations[texture] = item.preview_rotation
@@ -81,6 +107,12 @@ minetest.register_chatcommand("skin", {
 	description = S("Open skin configuration screen."),
 	privs = {},
 	func = function(name, param) edit_skin.show_formspec(minetest.get_player_by_name(name)) end
+})
+
+minetest.register_chatcommand("skin_lite", {
+	description = S("Open skin configuration screen."),
+	privs = {},
+	func = function(name, param) edit_skin.show_formspec(minetest.get_player_by_name(name), true) end
 })
 
 function edit_skin.compile_skin(skin)
@@ -133,6 +165,7 @@ end
 
 -- Load player skin on join
 minetest.register_on_joinplayer(function(player)
+    if player:get_meta():get_string("gender") == "" then player:get_meta():set_meta("gender", "male") end
 	local function table_get_random(t)
 		return t[math.random(#t)]
 	end
@@ -181,8 +214,10 @@ function edit_skin.register_on_set_skin(func)
 	table.insert(edit_skin.registered_on_set_skins, func)
 end
 
-function edit_skin.show_formspec(player, active_tab, page_num)
-	active_tab = active_tab or "template"
+function edit_skin.show_formspec(player, lite, active_tab, page_num)
+    local items = edit_skin.tab_names
+    if lite == true then items = edit_skin.tab_names_lite end
+	active_tab = active_tab or items[1]
 	page_num = page_num or 1
 	
 	local page_count
@@ -198,9 +233,15 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 	end
 	
 	local skin = edit_skin.players[player]
-	local formspec = "formspec_version[3]size[13.2,11]"
+	local formspec = "formspec_version[3]size[13.2,11]]"
 	
-	for i, tab in pairs(edit_skin.tab_names) do
+    if lite ~= true then
+        formspec = formspec ..
+            "button[0.3, 9.9;1.4, 0.8;male;"..S("Male").."]" ..
+            "button[1.9, 9.9;1.4, 0.8;female;"..S("Female").."]"
+    end
+
+	for i, tab in pairs(items) do
 		if tab == active_tab then
 			formspec = formspec ..
 				"style[" .. tab .. ";bgcolor=green]"
@@ -235,10 +276,15 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 			
 			"button[6.5,5.2;2,0.8;alex;" .. S("Select") .. "]"
 			
-	elseif edit_skin[active_tab] then
+	else
 		formspec = formspec ..
 			"style_type[button,image_button;border=false;bgcolor=#00000000]"
 		local textures = edit_skin[active_tab]
+        if active_tab == "base" then
+            textures = edit_skin[active_tab]
+        else
+            textures = edit_skin[player:get_meta():get_string("gender")][active_tab]
+        end
 		local page_start = (page_num - 1) * 16 + 1
 		local page_end = math.min(page_start + 16 - 1, #textures)
 		
@@ -354,19 +400,34 @@ function edit_skin.show_formspec(player, active_tab, page_num)
 			"label[6.3,7.2;" .. page_num .. " / " .. page_count .. "]"
 	end
 
-	minetest.show_formspec(player:get_player_name(), "edit_skin:" .. active_tab .. "_" .. page_num, formspec)
+    local formname = "edit_skin:"
+    if lite == true then formname = "edit_skin:lite_" end
+
+	minetest.show_formspec(player:get_player_name(), formname .. active_tab .. "_" .. page_num, formspec)
 end
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if not formname:find("^edit_skin:") then return false end
-	local _, _, active_tab, page_num = formname:find("^edit_skin:(%a+)_(%d+)")
+    local items = edit_skin.tab_names
+    local lite = false
+    if formname:find("lite_") then
+        items = edit_skin.tab_names_lite
+        lite = true 
+    end
+    local active_tab, page_num
+    if lite == true then
+	     _, _, active_tab, page_num = formname:find("^edit_skin:lite_(%a+)_(%d+)")
+     else
+         _, _, active_tab, page_num = formname:find("^edit_skin:(%a+)_(%d+)")
+     end
 	if not page_num or not active_tab then return true end
 	
 	local active_tab_found = false
-	for _, tab in pairs(edit_skin.tab_names) do
+	for _, tab in pairs(items) do
 		if tab == active_tab then active_tab_found = true end
 	end
-	active_tab = active_tab_found and active_tab or "template"
+    active_tab = active_tab_found and active_tab or items[1]
+
 	
 	page_num = math.floor(tonumber(page_num) or 1)
 	
@@ -380,21 +441,31 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		return true
 	end
 
-	if fields.alex then
+    if fields.male then
+        player:get_meta():set_string("gender", "male")
+		edit_skin.players[player] = table.copy(edit_skin.steve)
+		edit_skin.update_player_skin(player)
+		edit_skin.show_formspec(player, lite, active_tab, page_num)
+    elseif fields.female then
+        player:get_meta():set_string("gender", "female")
 		edit_skin.players[player] = table.copy(edit_skin.alex)
 		edit_skin.update_player_skin(player)
-		edit_skin.show_formspec(player, active_tab, page_num)
+		edit_skin.show_formspec(player, lite, active_tab, page_num)
+    elseif fields.alex then
+		edit_skin.players[player] = table.copy(edit_skin.alex)
+		edit_skin.update_player_skin(player)
+		edit_skin.show_formspec(player, lite, active_tab, page_num)
 		return true
 	elseif fields.steve then
 		edit_skin.players[player] = table.copy(edit_skin.steve)
 		edit_skin.update_player_skin(player)
-		edit_skin.show_formspec(player, active_tab, page_num)
+		edit_skin.show_formspec(player, lite, active_tab, page_num)
 		return true
 	end
 	
-	for i, tab in pairs(edit_skin.tab_names) do
+	for i, tab in pairs(items) do
 		if fields[tab] then
-			edit_skin.show_formspec(player, tab, page_num)
+			edit_skin.show_formspec(player, lite, tab, page_num)
 			return true
 		end
 	end
@@ -404,11 +475,11 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	
 	if fields.next_page then
 		page_num = page_num + 1
-		edit_skin.show_formspec(player, active_tab, page_num)
+		edit_skin.show_formspec(player, lite, active_tab, page_num)
 		return true
 	elseif fields.previous_page then
 		page_num = page_num - 1
-		edit_skin.show_formspec(player, active_tab, page_num)
+		edit_skin.show_formspec(player, lite, active_tab, page_num)
 		return true
 	end
 	
@@ -428,12 +499,12 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		
 		local color = 0xff000000 + red * 0x10000 + green * 0x100 + blue
 		if color >= 0 and color <= 0xffffffff then
-			-- We delay resedning the form because otherwise it will break dragging scrollbars
+			-- We delay resending the form because otherwise it will break dragging scrollbars
 			edit_skin.players[player].form_send_job = minetest.after(0.2, function()
 				if player and player:is_player() then
 					skin[active_tab .. "_color"] = color
 					edit_skin.update_player_skin(player)
-					edit_skin.show_formspec(player, active_tab, page_num)
+					edit_skin.show_formspec(player, lite, active_tab, page_num)
 					edit_skin.players[player].form_send_job = nil
 				end
 			end)
@@ -450,12 +521,18 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	end
 	
 	-- See if field is a texture
-	if field and edit_skin[active_tab] then
-		for i, texture in pairs(edit_skin[active_tab]) do
+	if field then
+        local searchin
+        if active_tab == "base" then
+            searchin = edit_skin[active_tab]
+        else
+            searchin = edit_skin[player:get_meta():get_string("gender")][active_tab]
+        end
+		for i, texture in pairs(searchin) do
 			if texture == field then
 				skin[active_tab] = texture
 				edit_skin.update_player_skin(player)
-				edit_skin.show_formspec(player, active_tab, page_num)
+				edit_skin.show_formspec(player, lite, active_tab, page_num)
 				return true
 			end
 		end
@@ -468,7 +545,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		if color and color >= 0 and color <= 0xffffffff then
 			skin[active_tab .. "_color"] = color
 			edit_skin.update_player_skin(player)
-			edit_skin.show_formspec(player, active_tab, page_num)
+			edit_skin.show_formspec(player, lite, active_tab, page_num)
 			return true
 		end
 	end
