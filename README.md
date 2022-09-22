@@ -11,10 +11,13 @@ This mod requires Minetest 5.5+
 This mod was originally made for MineClone 5.
 
 ## License
-Code under MIT license
-Author: MrRar
+**Code under MIT license**
 
-See image_credits.txt for image licensing.
+*See image_credits.txt for image licensing.*
+
+**Author:** [**MrRar**](https://github.com/MrRar)
+#### Contributions:
+- 'lite' formspec version and gender system: [**Dark Steveneq**](https://github.com/dark-steveneq)
 
 ## API
 
@@ -42,24 +45,33 @@ If set to true the item will be default for female character.
 If set to true the item will be default for male character.
 
 
-### `edit_skin.show_formspec(player, active_tab, page_num)`
+### `edit_skin.show_formspec(player, lite, active_tab, page_num)`
 Show the skin configuration screen.
+
 `player` is a player ObjectRef.
+
+`lite`  shows configuration screen with less tabs.
+
 `active_tab` is the tab that will be displayed. This parameter is optional.
 Can be one of: "base", "footwear", "eye", "mouth", "bottom", "top", "hair", "headwear"
 
 `page_num` The page number to display of there are multiple pages of items.
 This parameter is optional. Must be a number. If it is not a valid page number the closest page number will be shown.
 
+*PS: You can use `/skin_lite` chat command to open 'lite' configuration screen*
+
 ### `edit_skin.register_on_set_skin(func)`
 Register a function to be called whenever a player skin changes.
 The function will be given a player ObjectRef as a parameter.
 
 ### `edit_skin.save(player)`
-Save player skin. `player` is a player ObjectRef.
+Save player skin.
+
+`player` is a player ObjectRef.
 
 ### `edit_skin.update_player_skin(player)`
 Update a player based on skin data in edit_skin.players.
+
 `player` is a player ObjectRef.
 
 ### `edit_skin.base_color`
@@ -73,6 +85,6 @@ A table of ColorSpec integers that the player can select to color colorable skin
 A table mapped by player ObjectRef containing tables holding the player's selected skin items and colors.
 Only stores skin information for logged in users.
 
-### edit_skin.compile_skin(skin)
+### `edit_skin.compile_skin(skin)`
 `skin` is a table with skin item properties.
 Returns an image string.
