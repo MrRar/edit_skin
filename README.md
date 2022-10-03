@@ -12,9 +12,10 @@ This mod was originally made for MineClone 5.
 
 ## License
 Code under MIT license
+
 Author: MrRar
 
-See image_credits.txt for image licensing.
+See media_credits.txt for media licensing.
 
 ## API
 
@@ -26,14 +27,14 @@ Register a skin item. `item` is a table with item properties listed below.
 Set the item type. Valid values are: "base", "footwear", "eye", "mouth", "bottom", "top", "hair", "headwear"
 
 `texture`
-Set to the image file that will be used. If this property is omitted "blank.png" is used.
+Set to the image file that will be used. Transparent or semitransparnt parts of the texture can be colored by the `mask` texture. If this property is omitted "blank.png" is used.
 
 `mask`
 Set the color mask texture. Coloring is only applied to non transparent areas of the texture.
 Coloring only works for "base", "bottom, "top", and "hair".
 
 `preview_rotation`
-A table containing properties x and y. x and y represent the x and y rotation of the item preview.
+A table containing properties `x` and `y`. `x` and `y` represent the x and y rotation of the item preview.
 
 `alex`
 If set to true the item will be default for female character.
@@ -41,15 +42,15 @@ If set to true the item will be default for female character.
 `steve`
 If set to true the item will be default for male character.
 
+`restricted_to_admin`
+This item can only be selected by players with `edit_skin_admin` privilege.
 
-### `edit_skin.show_formspec(player, active_tab, page_num)`
+`for_player`
+This property is used to restrict the item to a specific player or players. If set to a string, the string is a player name. If set to a table, the table is an array of player names.
+
+### `edit_skin.show_formspec(player)`
 Show the skin configuration screen.
 `player` is a player ObjectRef.
-`active_tab` is the tab that will be displayed. This parameter is optional.
-Can be one of: "base", "footwear", "eye", "mouth", "bottom", "top", "hair", "headwear"
-
-`page_num` The page number to display of there are multiple pages of items.
-This parameter is optional. Must be a number. If it is not a valid page number the closest page number will be shown.
 
 ### `edit_skin.register_on_set_skin(func)`
 Register a function to be called whenever a player skin changes.
@@ -73,6 +74,15 @@ A table of ColorSpec integers that the player can select to color colorable skin
 A table mapped by player ObjectRef containing tables holding the player's selected skin items and colors.
 Only stores skin information for logged in users.
 
-### edit_skin.compile_skin(skin)
+### `edit_skin.player_formspecs`
+A table mapped by player ObjectRef containing tables holding player formspec state. The tables have the following properties:
+
+`active_tab`
+Set to the name of the current active tab.
+
+`page_num`
+Set to the current formspec page number.
+
+### `edit_skin.compile_skin(skin)`
 `skin` is a table with skin item properties.
 Returns an image string.

@@ -173,7 +173,13 @@
 	},
 	{
 		"type": "headwear",
-		"steve": true
+		"texture": "edit_skin_headwear_8.png",
+		"restricted_to_admin": true
+	},
+	{
+		"type": "headwear",
+		"steve": true,
+		"alex": true
 	},
 	{
 		"type": "bottom",

@@ -10,3 +10,4 @@ Tops=
 Hairs=
 Headwears=
 Open skin configuration screen.=
+Allows access to restricted skin items.=
