@@ -205,6 +205,14 @@ minetest.register_on_leaveplayer(function(player)
 	edit_skin.player_formspecs[player] = nil
 end)
 
+-- Minetest does not call register_on_leaveplayer callbacks for single player games
+minetest.register_on_shutdown(function()
+	local singleplayer = minetest.get_player_by_name("singleplayer")
+	if singleplayer then
+		singleplayer:get_inventory():set_size("hand", 0)
+	end
+end)
+
 edit_skin.registered_on_set_skins = {}
 
 function edit_skin.register_on_set_skin(func)
@@ -564,6 +572,8 @@ local function init()
 		output = output .. base
 		return output
 	end
+	local hand_def = minetest.registered_items[""]
+	local range = hand_def and hand_def.range
 	for _, base in pairs(edit_skin.base) do
 		for _, base_color in pairs(edit_skin.base_color) do
 			local id = base:gsub(".png$", "") .. color_to_string(base_color):gsub("#", "")
@@ -573,6 +583,7 @@ local function init()
 				tiles = { make_texture(base, base_color) },
 				use_texture_alpha = "clip",
 				mesh = "edit_skin_hand.obj",
+				range = range,
 			})
 		end
 	end
