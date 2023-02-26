@@ -49,6 +49,7 @@ edit_skin = {
 	headwear = {},
 	masks = {},
 	preview_rotations = {},
+	ranks = {},
 	player_skins = {},
 	player_formspecs = {},
 	restricted_to_player = {},
@@ -89,9 +90,8 @@ function edit_skin.register_item(item)
 	
 	table.insert(edit_skin[item.type], texture)
 	edit_skin.masks[texture] = item.mask
-	if item.preview_rotation then
-		edit_skin.preview_rotations[texture] = item.preview_rotation
-	end
+	edit_skin.preview_rotations[texture] = item.preview_rotation
+	edit_skin.ranks[texture] = item.rank
 end
 
 function edit_skin.save(player)
@@ -110,20 +110,28 @@ minetest.register_chatcommand("skin", {
 function edit_skin.compile_skin(skin)
 	if not skin then return "blank.png" end
 
-	local output = ""
-	for i, item in pairs(edit_skin.item_names) do
+	local ranks = {}
+	local layers = {}
+	for i, item in ipairs(edit_skin.item_names) do
 		local texture = skin[item]
+		local layer = ""
+		local rank = edit_skin.ranks[texture] or i * 10
 		if texture and texture ~= "blank.png" then
-			
 			if skin[item .. "_color"] and edit_skin.masks[texture] then
-				if #output > 0 then output = output .. "^" end
 				local color = color_to_string(skin[item .. "_color"])
-				output = output ..
-					"(" .. edit_skin.masks[texture] .. "^[colorize:" .. color .. ":alpha)"
+				layer = "(" .. edit_skin.masks[texture] .. "^[colorize:" .. color .. ":alpha)"
 			end
-			if #output > 0 then output = output .. "^" end
-			output = output .. texture
+			if #layer > 0 then layer = layer .. "^" end
+			layer = layer .. texture
+			layers[rank] = layer
+			table.insert(ranks, rank)
 		end
+	end
+	table.sort(ranks)
+	local output = ""
+	for i, rank in ipairs(ranks) do
+		if #output > 0 then output = output .. "^" end
+		output = output .. layers[rank]
 	end
 	return output
 end
@@ -205,11 +213,9 @@ minetest.register_on_leaveplayer(function(player)
 	edit_skin.player_formspecs[player] = nil
 end)
 
--- Minetest does not call register_on_leaveplayer callbacks for single player games
 minetest.register_on_shutdown(function()
-	local singleplayer = minetest.get_player_by_name("singleplayer")
-	if singleplayer then
-		singleplayer:get_inventory():set_size("hand", 0)
+	for _, player in pairs(minetest.get_connected_players()) do
+		player:get_inventory():set_size("hand", 0)
 	end
 end)
 

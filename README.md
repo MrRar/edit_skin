@@ -48,6 +48,29 @@ This item can only be selected by players with `edit_skin_admin` privilege.
 `for_player`
 This property is used to restrict the item to a specific player or players. If set to a string, the string is a player name. If set to a table, the table is an array of player names.
 
+`rank`
+This property is used to change the application order of the skin item when applied to a player.
+The default ranks for each item type are:
+
+base: 10
+
+footwear: 20
+
+eye: 30
+
+mouth: 40
+
+bottom: 50
+
+top: 60
+
+hair: 70
+
+headwear: 80
+
+Lower ranks are applied to the player first and can thus be covered by higher rank items.
+
+
 ### `edit_skin.show_formspec(player)`
 Show the skin configuration screen.
 `player` is a player ObjectRef.
@@ -65,14 +88,14 @@ Update a player based on skin data in edit_skin.players.
 
 ### `edit_skin.base_color`
 A table of ColorSpec integers that the player can select to color the base item.
-These colors are separate from `edit_skin.color` because some mods register two nodes per base color so the amount of base colors needs to be limited.
+These colors are separate from `edit_skin.color` because this mod registers a mesh hand node for each base and base color combination. The number of junk mesh hand nodes should be kept to a minimum.
 
 ### `edit_skin.color`
 A table of ColorSpec integers that the player can select to color colorable skin items.
 
 ### `edit_skin.players`
 A table mapped by player ObjectRef containing tables holding the player's selected skin items and colors.
-Only stores skin information for logged in users.
+Only stores skin information for logged in players.
 
 ### `edit_skin.player_formspecs`
 A table mapped by player ObjectRef containing tables holding player formspec state. The tables have the following properties:
