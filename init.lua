@@ -237,8 +237,7 @@ function edit_skin.show_formspec(player)
 	local active_tab = formspec_data.active_tab
 	local page_num = formspec_data.page_num
 	local skin = edit_skin.player_skins[player]
-	local formspec = "formspec_version[3]size[13.2,11]"
-	
+	local formspec = "formspec_version[3]size[14.2,11]"
 	for i, tab in pairs(edit_skin.tab_names) do
 		if tab == active_tab then
 			formspec = formspec ..
@@ -247,30 +246,32 @@ function edit_skin.show_formspec(player)
 		
 		local y = 0.3 + (i - 1) * 0.8
 		formspec = formspec ..
-			"button[0.3," .. y .. ";3,0.8;" .. tab .. ";" .. edit_skin.tab_descriptions[tab] .. "]"
+			"style[" .. tab .. ";content_offset=16,0]" ..
+			"button[0.3," .. y .. ";4,0.8;" .. tab .. ";" .. edit_skin.tab_descriptions[tab] .. "]" ..
+			"image[0.4," .. y + 0.1 .. ";0.6,0.6;edit_skin_icons.png^[verticalframe:9:" .. i - 1 .. "]"
 	end
 	
 	local mesh = player:get_properties().mesh or ""
 	local textures = player_api.get_textures(player)
 	textures[2] = "blank.png" -- Clear out the armor
 	formspec = formspec ..
-		"model[10,0.3;3,7;player_mesh;" .. mesh .. ";" ..
+		"model[11,0.3;3,7;player_mesh;" .. mesh .. ";" ..
 		table.concat(textures, ",") ..
 		";0,180;false;true;0,0]"
 	
 	if active_tab == "template" then
 		formspec = formspec ..
-			"model[4,2;2,3;player_mesh;" .. mesh .. ";" ..
+			"model[5,2;2,3;player_mesh;" .. mesh .. ";" ..
 			edit_skin.compile_skin(edit_skin.steve) ..
 			",blank.png,blank.png;0,180;false;true;0,0]" ..
 
-			"button[4,5.2;2,0.8;steve;" .. S("Select") .. "]" ..
+			"button[5,5.2;2,0.8;steve;" .. S("Select") .. "]" ..
 
-			"model[6.5,2;2,3;player_mesh;" .. mesh .. ";" ..
+			"model[7.5,2;2,3;player_mesh;" .. mesh .. ";" ..
 			edit_skin.compile_skin(edit_skin.alex) ..
 			",blank.png,blank.png;0,180;false;true;0,0]" ..
 			
-			"button[6.5,5.2;2,0.8;alex;" .. S("Select") .. "]"
+			"button[7.5,5.2;2,0.8;alex;" .. S("Select") .. "]"
 			
 	else
 		formspec = formspec ..
@@ -307,7 +308,7 @@ function edit_skin.show_formspec(player)
 			end
 			
 			i = i - 1
-			local x = 3.5 + i % 4 * 1.6
+			local x = 4.5 + i % 4 * 1.6
 			local y = 0.3 + math.floor(i / 4) * 1.6
 			formspec = formspec ..
 				"model[" .. x .. "," .. y ..
@@ -335,7 +336,7 @@ function edit_skin.show_formspec(player)
 		for i, colorspec in pairs(colors) do
 			local color = color_to_string(colorspec)
 			i = i - 1
-			local x = 3.6 + i % 6 * 0.9
+			local x = 4.6 + i % 6 * 0.9
 			local y = 8 + math.floor(i / 6) * 0.9
 			formspec = formspec ..
 				"image_button[" .. x .. "," .. y ..
@@ -356,7 +357,7 @@ function edit_skin.show_formspec(player)
 			local green = math.floor(selected_color / 0x100) - 0xff0000 - red * 0x100
 			local blue = selected_color - 0xff000000 - red * 0x10000 - green * 0x100
 			formspec = formspec ..
-				"container[9.2,8]" ..
+				"container[10.2,8]" ..
 				"scrollbaroptions[min=0;max=255;smallstep=20]" ..
 				
 				"box[0.4,0;2.49,0.38;red]" ..
@@ -385,17 +386,17 @@ function edit_skin.show_formspec(player)
 	
 	if page_num > 1 then
 		formspec = formspec ..
-			"image_button[3.5,6.7;1,1;edit_skin_arrow.png^[transformFX;previous_page;]"
+			"image_button[4.5,6.7;1,1;edit_skin_arrow.png^[transformFX;previous_page;]"
 	end
 	
 	if page_num < page_count then
 		formspec = formspec ..
-			"image_button[8.8,6.7;1,1;edit_skin_arrow.png;next_page;]"
+			"image_button[9.8,6.7;1,1;edit_skin_arrow.png;next_page;]"
 	end
 	
 	if page_count > 1 then
 		formspec = formspec ..
-			"label[6.3,7.2;" .. page_num .. " / " .. page_count .. "]"
+			"label[7.3,7.2;" .. page_num .. " / " .. page_count .. "]"
 	end
 
 	minetest.show_formspec(player:get_player_name(), "edit_skin:edit_skin", formspec)

@@ -3,7 +3,8 @@
 		"type": "footwear",
 		"texture": "edit_skin_footwear_1.png",
 		"steve": true,
-		"alex": true
+		"alex": true,
+		"rank": 55
 	},
 	{
 		"type": "footwear",
@@ -12,6 +13,11 @@
 	{
 		"type": "footwear",
 		"texture": "edit_skin_footwear_3.png"
+	},
+	{
+		"type": "footwear",
+		"texture": "edit_skin_footwear_4.png",
+		"rank": 55
 	},
 	{
 		"type": "footwear"

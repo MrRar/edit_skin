@@ -34,6 +34,8 @@ edit_skin_bottom_5.png
 edit_skin_hair_12.png
 edit_skin_top_16.png
 edit_skin_top_17.png
+edit_skin_icons.png
+edit_skin_footwear_4.png
 Original work by MrRar
 License: CC BY-SA 4.0
 
