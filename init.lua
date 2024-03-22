@@ -164,9 +164,6 @@ function edit_skin.update_player_skin(player)
 end
 
 minetest.register_on_joinplayer(function(player)
-	local function table_get_random(t)
-		return t[math.random(#t)]
-	end
 	local skin = player:get_meta():get_string("edit_skin:skin")
 	if skin then
 		skin = minetest.deserialize(skin)
@@ -225,7 +222,7 @@ function edit_skin.register_on_set_skin(func)
 	table.insert(edit_skin.registered_on_set_skins, func)
 end
 
-function edit_skin.show_formspec(player)
+function edit_skin.make_formspec(player)
 	local formspec_data = edit_skin.player_formspecs[player]
 	local has_admin_priv = minetest.check_player_privs(player, "edit_skin_admin")
 	if has_admin_priv ~= formspec_data.has_admin_priv then
@@ -237,7 +234,7 @@ function edit_skin.show_formspec(player)
 	local active_tab = formspec_data.active_tab
 	local page_num = formspec_data.page_num
 	local skin = edit_skin.player_skins[player]
-	local formspec = "formspec_version[3]size[14.2,11]"
+	local formspec = "real_coordinates[true]"
 	for i, tab in pairs(edit_skin.tab_names) do
 		if tab == active_tab then
 			formspec = formspec ..
@@ -399,7 +396,11 @@ function edit_skin.show_formspec(player)
 			"label[7.3,7.2;" .. page_num .. " / " .. page_count .. "]"
 	end
 
-	minetest.show_formspec(player:get_player_name(), "edit_skin:edit_skin", formspec)
+	return formspec
+end
+function edit_skin.show_formspec(player)
+	local formspec = "formspec_version[3]size[14.2,11]" .. edit_skin.make_formspec(player)
+	return minetest.show_formspec(player:get_player_name(), "edit_skin:edit_skin", formspec)
 end
 
 function edit_skin.filter_active_tab(player)
@@ -423,46 +424,40 @@ function edit_skin.filter_active_tab(player)
 	end
 end
 
-minetest.register_on_player_receive_fields(function(player, formname, fields)
-	if formname ~= "edit_skin:edit_skin" then return false end
-	
+function edit_skin.process_formspec_fields(player, fields)
 	local formspec_data = edit_skin.player_formspecs[player]
 	local active_tab = formspec_data.active_tab
-	
+
 	-- Cancel formspec resend after scrollbar move
 	if formspec_data.form_send_job then
 		formspec_data.form_send_job:cancel()
 	end
-	
+
 	if fields.quit then
-		edit_skin.save(player)
-		return true
+		return false
 	end
 
 	if fields.alex then
 		edit_skin.player_skins[player] = table.copy(edit_skin.alex)
 		edit_skin.update_player_skin(player)
-		edit_skin.show_formspec(player)
 		return true
 	elseif fields.steve then
 		edit_skin.player_skins[player] = table.copy(edit_skin.steve)
 		edit_skin.update_player_skin(player)
-		edit_skin.show_formspec(player)
 		return true
 	end
-	
+
 	for i, tab in pairs(edit_skin.tab_names) do
 		if fields[tab] then
 			formspec_data.active_tab = tab
 			formspec_data.page_num = 1
-			edit_skin.show_formspec(player)
 			return true
 		end
 	end
-	
+
 	local skin = edit_skin.player_skins[player]
-	if not skin then return true end
-	
+	if not skin then return end
+
 	if fields.next_page then
 		local page_num = formspec_data.page_num
 		page_num = page_num + 1
@@ -471,17 +466,15 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 			page_num = page_count
 		end
 		formspec_data.page_num = page_num
-		edit_skin.show_formspec(player)
 		return true
 	elseif fields.previous_page then
 		local page_num = formspec_data.page_num
 		page_num = page_num - 1
 		if page_num < 1 then page_num = 1 end
 		formspec_data.page_num = page_num
-		edit_skin.show_formspec(player)
 		return true
 	end
-	
+
 	if
 		skin[active_tab .. "_color"] and (
 			fields.red and fields.red:find("^CHG") or
@@ -495,7 +488,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		red = tonumber(red) or 0
 		green = tonumber(green) or 0
 		blue = tonumber(blue) or 0
-		
+
 		local color = 0xff000000 + red * 0x10000 + green * 0x100 + blue
 		if color >= 0 and color <= 0xffffffff then
 			-- We delay resedning the form because otherwise it will break dragging scrollbars
@@ -503,14 +496,14 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 				if player and player:is_player() then
 					skin[active_tab .. "_color"] = color
 					edit_skin.update_player_skin(player)
-					edit_skin.show_formspec(player)
 					formspec_data.form_send_job = nil
+					return true
 				end
 			end)
-			return true
+			return
 		end
 	end
-	
+
 	local field
 	for f, value in pairs(fields) do
 		if value == "" then
@@ -518,19 +511,18 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 			break
 		end
 	end
-	
+
 	-- See if field is a texture
 	if field and edit_skin[active_tab] then
 		for i, texture in pairs(formspec_data[active_tab]) do
 			if texture == field then
 				skin[active_tab] = texture
 				edit_skin.update_player_skin(player)
-				edit_skin.show_formspec(player)
 				return true
 			end
 		end
 	end
-		
+
 	-- See if field is a color
 	local number = tonumber(field)
 	if number and skin[active_tab .. "_color"] then
@@ -538,11 +530,16 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		if color and color >= 0 and color <= 0xffffffff then
 			skin[active_tab .. "_color"] = color
 			edit_skin.update_player_skin(player)
-			edit_skin.show_formspec(player)
 			return true
 		end
 	end
+end
 
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+	if formname ~= "edit_skin:edit_skin" then return false end
+	local update = edit_skin.process_formspec_fields(player, fields)
+	if update then edit_skin.show_formspec(player)
+	elseif update == false then edit_skin.save(player) end
 	return true
 end)
 
@@ -619,10 +616,16 @@ local function init()
 	elseif minetest.global_exists("sfinv") then
 		sfinv.register_page("edit_skin", {
 			title = S("Edit Skin"),
-			get = function(self, player, context) return "" end,
-			on_enter = function(self, player, context)
-				sfinv.contexts[player:get_player_name()].page = sfinv.get_homepage_name(player)
-				edit_skin.show_formspec(player)
+			get = function(self, player, context)
+				local formspec = edit_skin.make_formspec(player)
+				return sfinv.make_formspec(player, context, formspec, false, "size[11.2,8.7]")
+			end,
+			on_player_receive_fields = function(self, player, context, fields)
+				local update = edit_skin.process_formspec_fields(player, fields)
+				if update then
+					sfinv.set_player_inventory_formspec(player, context) -- Update the form after receiving fields.
+				end
+				edit_skin.save(player)
 			end
 		})
 	end
