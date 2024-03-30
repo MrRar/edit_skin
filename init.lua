@@ -399,6 +399,7 @@ function edit_skin.make_formspec(player)
 	return formspec
 end
 function edit_skin.show_formspec(player)
+	edit_skin.player_formspecs[player].no_sfinv = true
 	local formspec = "formspec_version[3]size[14.2,11]" .. edit_skin.make_formspec(player)
 	return minetest.show_formspec(player:get_player_name(), "edit_skin:edit_skin", formspec)
 end
@@ -434,6 +435,7 @@ function edit_skin.process_formspec_fields(player, fields)
 	end
 
 	if fields.quit then
+		formspec_data.no_sfinv = nil
 		return false
 	end
 
@@ -497,7 +499,16 @@ function edit_skin.process_formspec_fields(player, fields)
 					skin[active_tab .. "_color"] = color
 					edit_skin.update_player_skin(player)
 					formspec_data.form_send_job = nil
-					return true
+					if formspec_data.no_sfinv then
+						edit_skin.show_formspec(player)
+					end
+
+					if
+						minetest.global_exists("sfinv") and
+						sfinv.get_or_create_context(player).page == "edit_skin"
+					then
+						sfinv.set_player_inventory_formspec(player)
+					end
 				end
 			end)
 			return
@@ -538,7 +549,14 @@ end
 minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if formname ~= "edit_skin:edit_skin" then return false end
 	local update = edit_skin.process_formspec_fields(player, fields)
-	if update then edit_skin.show_formspec(player)
+	if update then
+		edit_skin.show_formspec(player)
+		if
+			minetest.global_exists("sfinv") and
+			sfinv.get_or_create_context(player).page == "edit_skin"
+		then
+			sfinv.set_player_inventory_formspec(player)
+		end
 	elseif update == false then edit_skin.save(player) end
 	return true
 end)
