@@ -399,7 +399,6 @@ function edit_skin.make_formspec(player)
 	return formspec
 end
 function edit_skin.show_formspec(player)
-	edit_skin.player_formspecs[player].no_sfinv = true
 	local formspec = "formspec_version[3]size[14.2,11]" .. edit_skin.make_formspec(player)
 	return minetest.show_formspec(player:get_player_name(), "edit_skin:edit_skin", formspec)
 end
@@ -429,13 +428,7 @@ function edit_skin.process_formspec_fields(player, fields)
 	local formspec_data = edit_skin.player_formspecs[player]
 	local active_tab = formspec_data.active_tab
 
-	-- Cancel formspec resend after scrollbar move
-	if formspec_data.form_send_job then
-		formspec_data.form_send_job:cancel()
-	end
-
 	if fields.quit then
-		formspec_data.no_sfinv = nil
 		return false
 	end
 
@@ -492,25 +485,19 @@ function edit_skin.process_formspec_fields(player, fields)
 		blue = tonumber(blue) or 0
 
 		local color = 0xff000000 + red * 0x10000 + green * 0x100 + blue
-		if color >= 0 and color <= 0xffffffff then
-			-- We delay resedning the form because otherwise it will break dragging scrollbars
+		if color >= 0 and color <= 0xffffffff 
+    and not formspec_data.form_send_job then -- if there is no job, continue
+			-- We delay timeout to prevent over-sending scrollbar events
 			formspec_data.form_send_job = minetest.after(0.2, function()
+        formspec_data.form_send_job = nil
+			end)
+
 				if player and player:is_player() then
 					skin[active_tab .. "_color"] = color
 					edit_skin.update_player_skin(player)
-					formspec_data.form_send_job = nil
-					if formspec_data.no_sfinv then
-						edit_skin.show_formspec(player)
-					end
-
-					if
-						minetest.global_exists("sfinv") and
-						sfinv.get_or_create_context(player).page == "edit_skin"
-					then
-						sfinv.set_player_inventory_formspec(player)
-					end
+          sfinv.set_player_inventory_formspec(player)
 				end
-			end)
+
 			return
 		end
 	end
@@ -549,14 +536,7 @@ end
 minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if formname ~= "edit_skin:edit_skin" then return false end
 	local update = edit_skin.process_formspec_fields(player, fields)
-	if update then
-		edit_skin.show_formspec(player)
-		if
-			minetest.global_exists("sfinv") and
-			sfinv.get_or_create_context(player).page == "edit_skin"
-		then
-			sfinv.set_player_inventory_formspec(player)
-		end
+	if update then edit_skin.show_formspec(player)
 	elseif update == false then edit_skin.save(player) end
 	return true
 end)
