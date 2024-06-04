@@ -427,6 +427,9 @@ end
 function edit_skin.process_formspec_fields(player, fields)
 	local formspec_data = edit_skin.player_formspecs[player]
 	local active_tab = formspec_data.active_tab
+	if formspec_data.form_send_job then
+		formspec_data.form_send_job:cancel()
+	end
 
 	if fields.quit then
 		return false
@@ -483,24 +486,26 @@ function edit_skin.process_formspec_fields(player, fields)
 		red = tonumber(red) or 0
 		green = tonumber(green) or 0
 		blue = tonumber(blue) or 0
-
+		
 		local color = 0xff000000 + red * 0x10000 + green * 0x100 + blue
-		if color >= 0 and color <= 0xffffffff 
-    and not formspec_data.form_send_job then -- if there is no job, continue
-			-- We delay timeout to prevent over-sending scrollbar events
-			formspec_data.form_send_job = minetest.after(0.2, function()
-        formspec_data.form_send_job = nil
-			end)
+		if color >= 0 and color <= 0xffffffff then
 
-				if player and player:is_player() then
-					skin[active_tab .. "_color"] = color
-					edit_skin.update_player_skin(player)
-          sfinv.set_player_inventory_formspec(player)
-				end
+    local context = sfinv.get_or_create_context(player)
+    context.skin = color
+
+    formspec_data.form_send_job = minetest.after(0.2, function()
+      if player and player:is_player() then
+        skin[active_tab .. "_color"] = color
+        edit_skin.update_player_skin(player)
+        sfinv.set_context(player, context)
+        sfinv.set_page(player, sfinv.get_page(player))
+      end
+    end)
 
 			return
 		end
 	end
+
 
 	local field
 	for f, value in pairs(fields) do
@@ -618,12 +623,19 @@ local function init()
 				local formspec = edit_skin.make_formspec(player)
 				return sfinv.make_formspec(player, context, formspec, false, "size[11.2,8.7]")
 			end,
+      on_enter = function(self, player, context)
+        if context.color then
+          context.color = nil
+        end
+      end,
+      on_leave = function(self, player, context)
+        edit_skin.save(player)
+      end,
 			on_player_receive_fields = function(self, player, context, fields)
 				local update = edit_skin.process_formspec_fields(player, fields)
 				if update then
-					sfinv.set_player_inventory_formspec(player, context) -- Update the form after receiving fields.
+          sfinv.set_player_inventory_formspec(player, context) -- Update the form after receiving fields.
 				end
-				edit_skin.save(player)
 			end
 		})
 	end
