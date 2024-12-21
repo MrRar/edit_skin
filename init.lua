@@ -579,8 +579,7 @@ local function init()
 		output = output .. base
 		return output
 	end
-	local hand_def = minetest.registered_items[""]
-	local range = hand_def and hand_def.range
+
 	for _, base in pairs(edit_skin.base) do
 		for _, base_color in pairs(edit_skin.base_color) do
 			local id = base:gsub(".png$", "") .. color_to_string(base_color):gsub("#", "")
@@ -590,10 +589,20 @@ local function init()
 				tiles = { make_texture(base, base_color) },
 				use_texture_alpha = "clip",
 				mesh = "edit_skin_hand.obj",
-				range = range,
 			})
 		end
 	end
+
+	minetest.after(0, function()
+		local hand_def = minetest.registered_items[""]
+		local range = hand_def and hand_def.range
+		for _, base in pairs(edit_skin.base) do
+			for _, base_color in pairs(edit_skin.base_color) do
+				local id = base:gsub(".png$", "") .. color_to_string(base_color):gsub("#", "")
+				minetest.override_item("edit_skin:" .. id, {range = range})
+			end
+		end
+	end)
 	
 	if minetest.global_exists("i3") then
 		i3.new_tab("edit_skin", {

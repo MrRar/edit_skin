@@ -201,6 +201,10 @@
 	},
 	{
 		"type": "headwear",
+		"texture": "edit_skin_headwear_12.png"
+	},
+	{
+		"type": "headwear",
 		"steve": true,
 		"alex": true
 	},
@@ -231,6 +235,11 @@
 		"texture": "edit_skin_bottom_5.png",
 		"mask": "edit_skin_bottom_5_mask.png",
 		"rank": 65
+	},
+	{
+		"type": "bottom",
+		"texture": "edit_skin_bottom_6.png",
+		"mask": "edit_skin_bottom_6_mask.png"
 	},
 	{
 		"type": "top",
@@ -324,6 +333,11 @@
 		"type": "top",
 		"texture": "edit_skin_top_18.png",
 		"mask": "edit_skin_top_18_mask.png"
+	},
+	{
+		"type": "top",
+		"texture": "edit_skin_top_19.png",
+		"mask": "edit_skin_top_19_mask.png"
 	},
 	{
 		"type": "base",
