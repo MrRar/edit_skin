@@ -1,14 +1,21 @@
 # textdomain: edit_skin
-Edit Skin=Ред. скин
+
+## ContentDB
+Edit Skin=Редактор Персонажа
+Advanced player skin customization=Расширенная конфигурация внешнего вида персонажа
+
+## Editor text
 Templates=Шаблоны
 Bases=Основы
 Footwears=Обувь
 Eyes=Глаза
-Mouths=Рот
-Bottoms=Нижние части
-Tops=Верхние части
+Mouths=Рты
+Bottoms=Нижнее
+Tops=Верхнее
 Hairs=Волосы
-Headwears=Голвные уборы
-Open skin configuration screen.=Открыть окно настройки скина.
-Allows access to restricted skin items.=Открывает доступ к ограниченным вариантам кожи.
+Headwears=Головные уборы
 Select=Выбрать
+
+## Command and Privilege description
+Open skin configuration screen.=Открывает меню конфигурации персонажа.
+Allows access to restricted skin items.=Даёт доступ к запрещённым предметам персонажа.
