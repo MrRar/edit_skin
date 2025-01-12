@@ -144,8 +144,9 @@ function edit_skin.update_player_skin(player)
 	-- Set player first person hand node
 	local base = edit_skin.player_skins[player].base
 	local base_color = edit_skin.player_skins[player].base_color
-	local node_id = base:gsub(".png$", "") .. color_to_string(base_color):gsub("#", "")
-	player:get_inventory():set_stack("hand", 1, "edit_skin:" .. node_id)
+	local node_id = "edit_skin:" .. base:gsub(".png$", "") .. color_to_string(base_color):gsub("#", "")
+	node_id = minetest.registered_items[node_id] and node_id or ""
+	player:get_inventory():set_stack("hand", 1, node_id)
 	
 	for i = 1, #edit_skin.registered_on_set_skins do
 		edit_skin.registered_on_set_skins[i](player)
@@ -285,7 +286,8 @@ function edit_skin.show_formspec(player)
 		for j = page_start, page_end do
 			local i = j - page_start + 1
 			local texture = textures[j]
-			local preview = edit_skin.masks[skin.base] .. "^[colorize:gray^" .. skin.base
+			local base = active_tab == "base" and texture or skin.base
+			local preview = edit_skin.masks[base] .. "^[colorize:gray^" .. base
 			local color = color_to_string(skin[active_tab .. "_color"])
 			local mask = edit_skin.masks[texture]
 			if color and mask then
@@ -599,7 +601,9 @@ local function init()
 		for _, base in pairs(edit_skin.base) do
 			for _, base_color in pairs(edit_skin.base_color) do
 				local id = base:gsub(".png$", "") .. color_to_string(base_color):gsub("#", "")
-				minetest.override_item("edit_skin:" .. id, {range = range})
+				if minetest.registered_items["edit_skin:" .. id] then
+					minetest.override_item("edit_skin:" .. id, {range = range})
+				end
 			end
 		end
 	end)
